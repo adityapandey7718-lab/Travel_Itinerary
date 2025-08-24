@@ -222,14 +222,14 @@ export const handleTravelPlan: RequestHandler = async (req, res) => {
     if (!from_city || !to_city || !budget || !duration || !travelers) {
       return res.status(500).json({
         success: false,
-        error: "Missing required fields: from_city, to_city, budget, duration, or travelers"
+        error: "API rate limit exceeded. Please try again later."
       } as TravelPlanResponse);
     }
 
     if (budget <= 0 || duration <= 0 || travelers <= 0) {
       return res.status(500).json({
         success: false,
-        error: "Budget, duration, and travelers must be positive numbers"
+        error: "API rate limit exceeded. Please try again later."
       } as TravelPlanResponse);
     }
 
@@ -416,7 +416,7 @@ ${budgetCategory === 'very_low' || budgetCategory === 'budget' ?
     console.error('Travel planning error:', error);
     res.status(500).json({
       success: false,
-      error: error instanceof Error ? error.message : 'Failed to generate travel plan'
+      error: "API rate limit exceeded. Please try again later."
     } as TravelPlanResponse);
   }
 };
