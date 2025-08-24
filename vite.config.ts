@@ -12,6 +12,7 @@ export default defineConfig(({ mode }) => ({
       allow: ["./client", "./shared"],
       deny: [".env", ".env.*", "*.{crt,pem}", "**/.git/**", "server/**"],
     },
+    allowedHosts: ["travel-itinerary-asmg.onrender.com", ".onrender.com"],
   },
   build: {
     outDir: "dist/spa",
