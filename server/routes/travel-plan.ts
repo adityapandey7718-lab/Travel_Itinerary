@@ -170,11 +170,23 @@ async function getStaticMap(lat: number, lng: number): Promise<string | null> {
   }
 }
 
+// Simple rate limiting
+let lastCallTime = 0;
+const MIN_INTERVAL = 2000; // 2 seconds between calls
+
 async function callGeminiAI(prompt: string): Promise<string> {
   const geminiApiKey = process.env.GEMINI_API_KEY;
   if (!geminiApiKey) {
     throw new Error("Gemini API key not configured");
   }
+
+  // Rate limiting
+  const now = Date.now();
+  if (now - lastCallTime < MIN_INTERVAL) {
+    const waitTime = MIN_INTERVAL - (now - lastCallTime);
+    await new Promise(resolve => setTimeout(resolve, waitTime));
+  }
+  lastCallTime = Date.now();
 
   try {
     const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${geminiApiKey}`, {
@@ -198,7 +210,13 @@ async function callGeminiAI(prompt: string): Promise<string> {
     });
 
     if (!response.ok) {
-      throw new Error(`Gemini API error: ${response.status}`);
+      if (response.status === 429) {
+        throw new Error("Gemini API rate limit exceeded. Please wait a few minutes and try again.");
+      } else if (response.status === 403) {
+        throw new Error("Gemini API key invalid or quota exceeded. Please check your API key.");
+      } else {
+        throw new Error(`Gemini API error: ${response.status} - ${response.statusText}`);
+      }
     }
 
     const aiResponse = await response.json();
