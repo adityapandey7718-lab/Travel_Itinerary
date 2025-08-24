@@ -216,10 +216,12 @@ async function callGeminiAI(prompt: string): Promise<string> {
 
 export const handleTravelPlan: RequestHandler = async (req, res) => {
   try {
+    console.log('Received request body:', req.body);
     const { from_city, to_city, budget, currency, duration, travelers }: TravelPlanRequest = req.body;
 
     // Validate inputs
     if (!from_city || !to_city || !budget || !duration || !travelers) {
+      console.log('Missing fields:', { from_city, to_city, budget, duration, travelers });
       return res.status(400).json({
         success: false,
         error: "Missing required fields: from_city, to_city, budget, duration, or travelers"

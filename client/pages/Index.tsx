@@ -37,7 +37,7 @@ export default function Index() {
   const [travelPlan, setTravelPlan] = useState<TravelPlan | null>(null);
 
   const handlePlanTrip = async () => {
-    if (!fromCity || !toCity || !budget || !duration || !travelers) {
+    if (!fromCity || !toCity || !budget || !duration || !travelers || !currency) {
       alert("Please fill in all required fields");
       return;
     }
