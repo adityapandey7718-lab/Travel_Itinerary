@@ -220,14 +220,14 @@ export const handleTravelPlan: RequestHandler = async (req, res) => {
 
     // Validate inputs
     if (!from_city || !to_city || !budget || !duration || !travelers) {
-      return res.status(400).json({
+      return res.status(500).json({
         success: false,
         error: "Missing required fields: from_city, to_city, budget, duration, or travelers"
       } as TravelPlanResponse);
     }
 
     if (budget <= 0 || duration <= 0 || travelers <= 0) {
-      return res.status(400).json({
+      return res.status(500).json({
         success: false,
         error: "Budget, duration, and travelers must be positive numbers"
       } as TravelPlanResponse);
