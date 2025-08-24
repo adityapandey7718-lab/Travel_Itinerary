@@ -15,6 +15,8 @@ export default defineConfig(({ mode }) => ({
   },
   build: {
     outDir: "dist/spa",
+    // Allow the deployed host for Vite dev server
+    allowedHosts: ["travel-itinerary-asmg.onrender.com"],
   },
   plugins: [react(), expressPlugin()],
   resolve: {
