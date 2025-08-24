@@ -38,7 +38,14 @@ export default function Index() {
 
   const handlePlanTrip = async () => {
     if (!fromCity || !toCity || !budget || !duration || !travelers || !currency) {
+      console.log('Validation failed:', { fromCity, toCity, budget, duration, travelers, currency });
       alert("Please fill in all required fields");
+      return;
+    }
+    
+    // Additional validation
+    if (parseFloat(budget) <= 0 || parseInt(duration) <= 0 || parseInt(travelers) <= 0) {
+      alert("Budget, duration, and travelers must be positive numbers");
       return;
     }
 
@@ -46,19 +53,23 @@ export default function Index() {
     setTravelPlan(null);
 
     try {
+      const requestBody = {
+        from_city: fromCity,
+        to_city: toCity,
+        budget: parseFloat(budget),
+        currency: currency,
+        duration: parseInt(duration),
+        travelers: parseInt(travelers)
+      };
+      
+      console.log('Sending request:', requestBody);
+      
       const response = await fetch('/api/travel-plan', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({
-          from_city: fromCity,
-          to_city: toCity,
-          budget: parseFloat(budget),
-          currency: currency,
-          duration: parseInt(duration),
-          travelers: parseInt(travelers)
-        }),
+        body: JSON.stringify(requestBody),
       });
 
       // Check if response is ok before trying to parse JSON
