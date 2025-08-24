@@ -1,64 +1,97 @@
-import serverless from "serverless-http";
-import express from "express";
-import cors from "cors";
 import { handleTravelPlan } from "../../server/routes/travel-plan";
 
-const app = express();
-
-// Middleware
-app.use(cors({
-  origin: true,
-  credentials: true,
-  methods: ['GET', 'POST', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization']
-}));
-
-// Handle preflight requests
-app.options('*', cors());
-
-app.use(express.json({ limit: '10mb' }));
-app.use(express.urlencoded({ extended: true, limit: '10mb' }));
-
-// Debug middleware
-app.use((req, res, next) => {
-  console.log('Netlify function received request:', {
-    method: req.method,
-    url: req.url,
-    headers: req.headers,
-    body: req.body,
-    bodyKeys: req.body ? Object.keys(req.body) : []
+export const handler = async (event, context) => {
+  console.log('Netlify function received event:', {
+    method: event.httpMethod,
+    path: event.path,
+    headers: event.headers,
+    body: event.body
   });
-  next();
-});
 
-// Test endpoint
-app.get("/api/test", (req, res) => {
-  res.json({ message: "Netlify function is working!", timestamp: new Date().toISOString() });
-});
+  // Handle CORS preflight
+  if (event.httpMethod === 'OPTIONS') {
+    return {
+      statusCode: 200,
+      headers: {
+        'Access-Control-Allow-Origin': '*',
+        'Access-Control-Allow-Headers': 'Content-Type',
+        'Access-Control-Allow-Methods': 'POST, OPTIONS'
+      },
+      body: ''
+    };
+  }
 
-// Direct route handling
-app.post("/travel-plan", handleTravelPlan);
+  // Handle travel plan request
+  if (event.httpMethod === 'POST' && event.path.endsWith('/travel-plan')) {
+    try {
+      // Parse the request body
+      const body = JSON.parse(event.body || '{}');
+      console.log('Parsed body:', body);
 
-// Error handling middleware
-app.use((err, req, res, next) => {
-  console.error('Error in Netlify function:', err);
-  res.status(500).json({ 
-    success: false, 
-    error: 'Internal server error',
-    details: err.message 
-  });
-});
+      // Create mock request and response objects
+      const req = {
+        body,
+        method: event.httpMethod,
+        url: event.path,
+        headers: event.headers
+      };
 
-// Catch-all route for debugging
-app.use('*', (req, res) => {
-  console.log('Catch-all route hit:', req.method, req.url);
-  res.status(404).json({ 
-    success: false, 
-    error: 'Route not found',
-    method: req.method,
-    url: req.url,
-    body: req.body
-  });
-});
+      const res = {
+        status: (code) => ({
+          json: (data) => ({
+            statusCode: code,
+            headers: {
+              'Content-Type': 'application/json',
+              'Access-Control-Allow-Origin': '*'
+            },
+            body: JSON.stringify(data)
+          })
+        }),
+        json: (data) => ({
+          statusCode: 200,
+          headers: {
+            'Content-Type': 'application/json',
+            'Access-Control-Allow-Origin': '*'
+          },
+          body: JSON.stringify(data)
+        })
+      };
 
-export const handler = serverless(app);
+      // Call the travel plan handler
+      await handleTravelPlan(req, res);
+      
+      // Return the response
+      return res.status(200).json({ success: true, message: 'Travel plan generated' });
+      
+    } catch (error) {
+      console.error('Error in travel plan handler:', error);
+      return {
+        statusCode: 500,
+        headers: {
+          'Content-Type': 'application/json',
+          'Access-Control-Allow-Origin': '*'
+        },
+        body: JSON.stringify({
+          success: false,
+          error: 'Failed to generate travel plan',
+          details: error.message
+        })
+      };
+    }
+  }
+
+  // Default response
+  return {
+    statusCode: 404,
+    headers: {
+      'Content-Type': 'application/json',
+      'Access-Control-Allow-Origin': '*'
+    },
+    body: JSON.stringify({
+      success: false,
+      error: 'Route not found',
+      path: event.path,
+      method: event.httpMethod
+    })
+  };
+};
