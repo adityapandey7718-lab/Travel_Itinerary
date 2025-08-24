@@ -12,12 +12,12 @@ export default defineConfig(({ mode }) => ({
       allow: ["./client", "./shared"],
       deny: [".env", ".env.*", "*.{crt,pem}", "**/.git/**", "server/**"],
     },
-    allowedHosts: ["travel-itinerary-asmg.onrender.com", ".onrender.com"],
+    allowedHosts: true, // Allow all hosts for Netlify deployment
   },
   build: {
     outDir: "dist/spa",
-    // Allow the deployed host for Vite dev server
-    allowedHosts: ["travel-itinerary-asmg.onrender.com"],
+    // Allow all hosts for build
+    allowedHosts: "all",
   },
   plugins: [react(), expressPlugin()],
   resolve: {
