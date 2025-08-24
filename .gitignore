@@ -1,0 +1,29 @@
+# secrets
+.env
+.env.*
+*.pem
+*.key
+*.p12
+*.keystore
+*.crt
+*.cer
+*.pfx
+*.asc
+id_rsa*
+*secret*.json
+*credentials*.json
+*service-account*.json
+
+# common runtime clutter
+node_modules/
+dist/
+build/
+coverage/
+.DS_Store
+*.log
+*.sqlite
+*.sqlite3
+__pycache__/
+*.pyc
+.venv/
+.envrc
