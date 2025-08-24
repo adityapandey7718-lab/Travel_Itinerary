@@ -64,7 +64,7 @@ export default function Index() {
       
       console.log('Sending request:', requestBody);
       
-      const response = await fetch('/api/travel-plan', {
+      const response = await fetch('/.netlify/functions/api/travel-plan', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

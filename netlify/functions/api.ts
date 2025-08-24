@@ -37,7 +37,7 @@ app.get("/api/test", (req, res) => {
 });
 
 // Direct route handling
-app.post("/api/travel-plan", handleTravelPlan);
+app.post("/travel-plan", handleTravelPlan);
 
 // Error handling middleware
 app.use((err, req, res, next) => {
