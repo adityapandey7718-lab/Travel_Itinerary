@@ -27,7 +27,9 @@
     "vite": "^7.1.2",
     "@vitejs/plugin-react-swc": "^4.0.0",
     "typescript": "^5.9.2",
-    "tsx": "^4.20.3"
+    "tsx": "^4.20.3",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1"
   },
   "devDependencies": {
     "@hookform/resolvers": "^5.2.1",
@@ -84,9 +86,7 @@
     "vaul": "^1.1.2",
     "postcss": "^8.5.6",
     "prettier": "^3.6.2",
-    "react": "^18.3.1",
     "react-day-picker": "^9.8.1",
-    "react-dom": "^18.3.1",
     "react-hook-form": "^7.62.0",
     "react-resizable-panels": "^3.0.4",
     "react-router-dom": "^6.30.1",
