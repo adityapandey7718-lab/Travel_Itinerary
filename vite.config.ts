@@ -16,8 +16,6 @@ export default defineConfig(({ mode }) => ({
   },
   build: {
     outDir: "dist/spa",
-    // Allow all hosts for build
-    allowedHosts: "all",
   },
   plugins: [react(), expressPlugin()],
   resolve: {
