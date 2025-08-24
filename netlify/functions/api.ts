@@ -4,6 +4,8 @@ export const handler = async (event, context) => {
   console.log('Netlify function received event:', {
     method: event.httpMethod,
     path: event.path,
+    rawPath: event.rawPath,
+    pathParameters: event.pathParameters,
     headers: event.headers,
     body: event.body
   });
@@ -22,7 +24,7 @@ export const handler = async (event, context) => {
   }
 
   // Handle travel plan request
-  if (event.httpMethod === 'POST' && event.path.endsWith('/travel-plan')) {
+  if (event.httpMethod === 'POST') {
     try {
       // Parse the request body
       const body = JSON.parse(event.body || '{}');
@@ -57,11 +59,35 @@ export const handler = async (event, context) => {
         })
       };
 
-      // Call the travel plan handler
-      await handleTravelPlan(req, res);
+      // Call the travel plan handler and capture the response
+      let responseData = null;
+      let statusCode = 200;
       
-      // Return the response
-      return res.status(200).json({ success: true, message: 'Travel plan generated' });
+      const mockRes = {
+        status: (code) => {
+          statusCode = code;
+          return {
+            json: (data) => {
+              responseData = data;
+            }
+          };
+        },
+        json: (data) => {
+          responseData = data;
+        }
+      };
+
+      await handleTravelPlan(req, mockRes);
+      
+      // Return the captured response
+      return {
+        statusCode: statusCode,
+        headers: {
+          'Content-Type': 'application/json',
+          'Access-Control-Allow-Origin': '*'
+        },
+        body: JSON.stringify(responseData || { success: false, error: 'No response data' })
+      };
       
     } catch (error) {
       console.error('Error in travel plan handler:', error);
