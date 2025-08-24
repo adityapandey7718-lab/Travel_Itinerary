@@ -180,6 +180,11 @@ async function callGeminiAI(prompt: string): Promise<string> {
     throw new Error("Gemini API key not configured");
   }
 
+  // Validate prompt
+  if (!prompt || prompt.length > 30000) {
+    throw new Error("Invalid prompt: too long or empty");
+  }
+
   // Rate limiting
   const now = Date.now();
   if (now - lastCallTime < MIN_INTERVAL) {
@@ -188,13 +193,8 @@ async function callGeminiAI(prompt: string): Promise<string> {
   }
   lastCallTime = Date.now();
 
-  try {
-    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${geminiApiKey}`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
+      try {
+      const requestBody = {
         contents: [{
           parts: [{
             text: prompt
@@ -206,17 +206,41 @@ async function callGeminiAI(prompt: string): Promise<string> {
           topP: 0.95,
           maxOutputTokens: 4000,
         }
-      })
-    });
+      };
+
+      console.log('Sending request to Gemini API:', {
+        url: `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent`,
+        promptLength: prompt.length,
+        requestBody
+      });
+
+      const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${geminiApiKey}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(requestBody)
+      });
 
     if (!response.ok) {
-      if (response.status === 429) {
-        throw new Error("Gemini API rate limit exceeded. Please wait a few minutes and try again.");
-      } else if (response.status === 403) {
-        throw new Error("Gemini API key invalid or quota exceeded. Please check your API key.");
-      } else {
-        throw new Error(`Gemini API error: ${response.status} - ${response.statusText}`);
+      let errorMessage = `Gemini API error: ${response.status} - ${response.statusText}`;
+      
+      try {
+        const errorData = await response.text();
+        console.error('Gemini API error response:', errorData);
+        
+        if (response.status === 429) {
+          errorMessage = "Gemini API rate limit exceeded. Please wait a few minutes and try again.";
+        } else if (response.status === 400) {
+          errorMessage = `Gemini API bad request: ${errorData}`;
+        } else if (response.status === 403) {
+          errorMessage = "Gemini API key invalid or quota exceeded. Please check your API key.";
+        }
+      } catch (parseError) {
+        console.error('Could not parse error response:', parseError);
       }
+      
+      throw new Error(errorMessage);
     }
 
     const aiResponse = await response.json();
@@ -235,6 +259,16 @@ async function callGeminiAI(prompt: string): Promise<string> {
 export const handleTravelPlan: RequestHandler = async (req, res) => {
   try {
     console.log('Received request body:', req.body);
+    
+    // Check if Gemini API key is available
+    if (!process.env.GEMINI_API_KEY) {
+      console.error('Gemini API key not found in environment variables');
+      return res.status(500).json({
+        success: false,
+        error: "Gemini API key not configured. Please check your environment variables."
+      } as TravelPlanResponse);
+    }
+    
     const { from_city, to_city, budget, currency, duration, travelers }: TravelPlanRequest = req.body;
 
     // Validate inputs
@@ -259,34 +293,12 @@ export const handleTravelPlan: RequestHandler = async (req, res) => {
     const budgetBreakdown = createBudgetBreakdown(budgetINR, budgetCategory);
 
     // Step 1: Research destination and get overview
-    const overviewPrompt = `
-As a travel expert, provide a comprehensive overview for a trip from ${from_city} to ${to_city}.
-
-Trip Details:
-- Duration: ${duration} days
-- Travelers: ${travelers} people
-- Total Budget: ₹${budgetINR.toLocaleString('en-IN')} (${currency} ${budget.toLocaleString()})
-- Budget Category: ${budgetCategory}
-
-Please provide a clean, engaging overview of what makes ${to_city} special and what travelers can expect from this destination. Write in simple, readable paragraphs without using markdown formatting, asterisks, hashes, or special symbols. Use plain text only.
-`;
+    const overviewPrompt = `Provide a travel overview for ${from_city} to ${to_city}. Duration: ${duration} days, ${travelers} travelers, Budget: ₹${budgetINR.toLocaleString('en-IN')} (${budgetCategory}). Write about what makes ${to_city} special in simple paragraphs.`;
 
     const overview = await callGeminiAI(overviewPrompt);
 
     // Step 2: Get places to visit and attractions
-    const placesPrompt = `
-List the top 10-15 must-visit places and attractions in ${to_city} for a ${duration}-day trip with ${travelers} travelers on a ${budgetCategory} budget.
-
-For each place, provide:
-- Name of the place
-- Brief description (1-2 lines)
-- Why it's special
-- Approximate time needed to visit
-- Best time of day to visit
-- Entry fees or costs (if any)
-
-Please write in simple, clean paragraphs for each attraction. Do not use markdown formatting, asterisks, hashes, or special symbols. Use plain text with clear spacing between attractions. Number each attraction (1, 2, 3...) for easy reading.
-`;
+    const placesPrompt = `List top 10-15 attractions in ${to_city} for ${duration} days, ${travelers} travelers, ${budgetCategory} budget. Include name, description, why special, time needed, best time, and costs. Number each attraction.`;
 
     const attractivePlaces = await callGeminiAI(placesPrompt);
 
