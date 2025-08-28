@@ -299,6 +299,77 @@ async function callGeminiAI(prompt: string): Promise<string> {
   }
 }
 
+async function generatePlanViaGemini(params: {
+  from_city: string;
+  to_city: string;
+  budgetINR: number;
+  currency: string;
+  budget: number;
+  duration: number;
+  travelers: number;
+  budgetCategory: string;
+  budgetBreakdown: { accommodation: number; food: number; transport: number; activities: number; miscellaneous: number };
+}): Promise<{
+  overview: string;
+  attractive_places: string;
+  restaurants: string;
+  travel_methods: string;
+  detailed_itinerary: string;
+}> {
+  const { from_city, to_city, budgetINR, currency, budget, duration, travelers, budgetCategory, budgetBreakdown } = params;
+
+  const jsonPrompt = `You are a helpful travel planner.
+Return ONLY a compact JSON object with these string fields: overview, attractive_places, restaurants, travel_methods, detailed_itinerary.
+Do not include markdown, code fences, or any additional commentary.
+
+Context:
+From: ${from_city}
+To: ${to_city}
+Duration: ${duration} days
+Travelers: ${travelers}
+Budget: INR ${budgetINR.toLocaleString('en-IN')} (input: ${currency} ${budget.toLocaleString()})
+Budget Category: ${budgetCategory}
+Budget Breakdown (INR totals):
+  accommodation=${Math.round(budgetBreakdown.accommodation)}
+  food=${Math.round(budgetBreakdown.food)}
+  transport=${Math.round(budgetBreakdown.transport)}
+  activities=${Math.round(budgetBreakdown.activities)}
+  miscellaneous=${Math.round(budgetBreakdown.miscellaneous)}
+
+Guidelines:
+- overview: simple paragraphs on what makes ${to_city} special.
+- attractive_places: numbered list (plain text) of 10-15 attractions with short details.
+- restaurants: plain text for breakfast/lunch/dinner/street food with price ranges.
+- travel_methods: flights/trains/bus/local transport and budget split, plain text.
+- detailed_itinerary: day-by-day schedule with morning/afternoon/evening, realistic costs; include a final BUDGET SPENT SUMMARY.
+`;
+
+  const raw = await callGeminiAI(jsonPrompt);
+
+  try {
+    const start = raw.indexOf('{');
+    const end = raw.lastIndexOf('}');
+    const jsonSlice = start !== -1 && end !== -1 ? raw.slice(start, end + 1) : raw;
+    const parsed = JSON.parse(jsonSlice);
+    return {
+      overview: String(parsed.overview || ''),
+      attractive_places: String(parsed.attractive_places || ''),
+      restaurants: String(parsed.restaurants || ''),
+      travel_methods: String(parsed.travel_methods || ''),
+      detailed_itinerary: String(parsed.detailed_itinerary || ''),
+    };
+  } catch (e) {
+    // Fallback: if JSON parsing fails, return the entire text as overview to avoid complete failure
+    return {
+      overview: raw,
+      attractive_places: '',
+      restaurants: '',
+      travel_methods: '',
+      detailed_itinerary: '',
+    };
+  }
+}
+
 export const handleTravelPlan: RequestHandler = async (req, res) => {
   try {
     console.log('Received request body:', req.body);
@@ -344,83 +415,23 @@ export const handleTravelPlan: RequestHandler = async (req, res) => {
     const budgetCategory = getBudgetCategory(budgetINR, duration, travelers);
     const budgetBreakdown = createBudgetBreakdown(budgetINR, budgetCategory);
 
-    // Step 1: Research destination and get overview
-    const overviewPrompt = `Provide a travel overview for ${from_city} to ${to_city}. Duration: ${duration} days, ${travelers} travelers, Budget: ₹${budgetINR.toLocaleString('en-IN')} (${budgetCategory}). Write about what makes ${to_city} special in simple paragraphs.`;
-
-    const overview = sanitizeAiText(await callGeminiAI(overviewPrompt));
-
-    // Step 2: Get places to visit and attractions
-    const placesPrompt = `List top 10-15 attractions in ${to_city} for ${duration} days, ${travelers} travelers, ${budgetCategory} budget. Include name, description, why special, time needed, best time, and costs. Number each attraction.`;
-
-    const attractivePlaces = sanitizeAiText(await callGeminiAI(placesPrompt));
-
-    // Step 3: Get restaurant recommendations
-    const restaurantsPrompt = `
-Recommend restaurants and dining options in ${to_city} for ${travelers} people on a ${budgetCategory} budget (₹${budgetINR.toLocaleString('en-IN')} total budget).
-
-Provide recommendations for:
-1. Breakfast places (3-4 options)
-2. Lunch options (4-5 options)
-3. Dinner restaurants (4-5 options)
-4. Street food and local snacks
-5. Desserts and cafes
-
-For each recommendation include restaurant name, location, cuisine type, signature dishes, price range per person, and why it's recommended.
-
-Please write in simple, clean text without using markdown formatting, asterisks, hashes, or special symbols. Use plain paragraphs with clear spacing between different meal categories and restaurants.
-`;
-
-    const restaurants = sanitizeAiText(await callGeminiAI(restaurantsPrompt));
-
-    // Step 4: Get travel methods from source to destination
-    const travelMethodsPrompt = `
-Provide comprehensive travel options from ${from_city} to ${to_city}:
-
-1. Flight options - Major airlines, flight duration, booking strategies, cost range for ${travelers} travelers, best airports
-2. Train options (if applicable) - Routes, duration, class options, costs, booking tips
-3. Bus or road options (if applicable) - Services, driving routes, duration, cost estimates
-4. Local transportation in ${to_city} - Best ways to get around, public transport, taxi apps, walking areas
-5. Transportation budget allocation - Recommended budget split for ${budgetCategory} category, cost-saving tips
-
-Consider the ${duration}-day trip for ${travelers} people with a total budget of ₹${budgetINR.toLocaleString('en-IN')}.
-
-Please write in simple, clean paragraphs without using markdown formatting, asterisks, hashes, or special symbols. Use plain text with clear spacing between different transportation options.
-`;
-
-    const travelMethods = sanitizeAiText(await callGeminiAI(travelMethodsPrompt));
-
-    // Step 5: Create detailed day-by-day itinerary with budget breakdown
-    const itineraryPrompt = `
-Create a detailed ${duration}-day itinerary for ${travelers} travelers from ${from_city} to ${to_city} with a total budget of ₹${budgetINR.toLocaleString('en-IN')} (${budgetCategory} category).
-
-Budget Breakdown:
-- Accommodation: ₹${Math.round(budgetBreakdown.accommodation).toLocaleString('en-IN')}
-- Food: ₹${Math.round(budgetBreakdown.food).toLocaleString('en-IN')}
-- Transport: ₹${Math.round(budgetBreakdown.transport).toLocaleString('en-IN')}
-- Activities: ₹${Math.round(budgetBreakdown.activities).toLocaleString('en-IN')}
-- Miscellaneous: ₹${Math.round(budgetBreakdown.miscellaneous).toLocaleString('en-IN')}
-
-Create a time-based schedule for each day with morning, afternoon, and evening activities. For each time slot include the activity or location, duration, cost per person, transportation details, and tips.
-
-Include realistic travel times between locations, specific attraction entry fees, meal costs, transportation costs, and cultural tips.
-
-IMPORTANT: At the end of the itinerary, provide a comprehensive "BUDGET SPENT SUMMARY" section that includes:
-
-1. Total accommodation costs for ${duration} days
-2. Total food costs (all meals for ${travelers} people)
-3. Total transportation costs (flights/trains + local transport)
-4. Total activity and attraction costs
-5. Total miscellaneous expenses
-6. GRAND TOTAL SPENT for the entire trip
-7. Comparison with allocated budget (₹${budgetINR.toLocaleString('en-IN')})
-8. Amount saved or exceeded
-
-Make sure all costs are realistic and add up correctly. Show both total costs and per-person costs.
-
-Please write in simple, clean text without using markdown formatting, asterisks, hashes, pipes, or special symbols. Use plain paragraphs with clear spacing between days and time periods. Make the schedule practical and enjoyable within the budget.
-`;
-
-    const detailedItinerary = sanitizeAiText(await callGeminiAI(itineraryPrompt));
+    // Single Gemini call returning JSON with all sections
+    const combined = await generatePlanViaGemini({
+      from_city,
+      to_city,
+      budgetINR,
+      currency,
+      budget,
+      duration,
+      travelers,
+      budgetCategory,
+      budgetBreakdown,
+    });
+    const overview = sanitizeAiText(combined.overview);
+    const attractivePlaces = sanitizeAiText(combined.attractive_places);
+    const restaurants = sanitizeAiText(combined.restaurants);
+    const travelMethods = sanitizeAiText(combined.travel_methods);
+    const detailedItinerary = sanitizeAiText(combined.detailed_itinerary);
 
     // Step 6: Get coordinates and create maps
     const [fromCoords, toCoords] = await Promise.all([
