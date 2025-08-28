@@ -37,6 +37,20 @@ const CURRENCY_RATES = {
   "AED": 22.6
 };
 
+/**
+ * Remove unwanted formatting symbols from AI text outputs while preserving new lines and readability.
+ */
+function sanitizeAiText(text: string): string {
+  if (!text) return text;
+  // Remove common markdown/formatting symbols: asterisks, hashes, backticks, pipes
+  const withoutSymbols = text.replace(/[\*#`|]/g, "");
+  // Remove bullet unicode characters
+  const withoutBullets = withoutSymbols.replace(/[\u2022\u25CF\u25AA]/g, "");
+  // Normalize excessive spaces but keep newlines
+  const normalized = withoutBullets.replace(/[\t\r]/g, "").replace(/ {2,}/g, " ");
+  return normalized.trim();
+}
+
 // Budget categories based on per person per day in INR
 const BUDGET_CATEGORIES = {
   budget: 1000,
@@ -92,6 +106,35 @@ function createBudgetBreakdown(totalBudget: number, category: string) {
   }
 
   return breakdown;
+}
+
+function generateMockTravelPlan(body: any): TravelPlanResponse {
+  const { from_city, to_city, budget, currency, duration, travelers } = body || {};
+  const budgetINR = typeof budget === 'number' ? convertToINR(budget, currency || 'INR') : 0;
+  const budgetCategory = budgetINR && duration && travelers ? getBudgetCategory(budgetINR, duration, travelers) : 'budget';
+  const breakdown = budgetINR ? createBudgetBreakdown(budgetINR, budgetCategory) : { accommodation: 0, food: 0, transport: 0, activities: 0, miscellaneous: 0 };
+
+  const overview = sanitizeAiText(`A pleasant trip from ${from_city || 'your city'} to ${to_city || 'destination'} over ${duration || '?'} days for ${travelers || '?'} travelers.`);
+  const attractivePlaces = sanitizeAiText(`1. Central Park - Relaxing green space.\n2. City Museum - Local history and culture.`);
+  const restaurants = sanitizeAiText(`Breakfast: Cozy Cafe; Lunch: Downtown Deli; Dinner: Riverside Grill.`);
+  const travelMethods = sanitizeAiText(`Flights, trains, and local taxis are available with budget options for ${budgetCategory}.`);
+  const budgetBreakdownText = sanitizeAiText(`Accommodation: ₹${Math.round(breakdown.accommodation).toLocaleString('en-IN')}\nFood: ₹${Math.round(breakdown.food).toLocaleString('en-IN')}\nTransport: ₹${Math.round(breakdown.transport).toLocaleString('en-IN')}\nActivities: ₹${Math.round(breakdown.activities).toLocaleString('en-IN')}\nMiscellaneous: ₹${Math.round(breakdown.miscellaneous).toLocaleString('en-IN')}`);
+  const detailedItinerary = sanitizeAiText(`Day 1: Arrival and city walk. Day 2: Museums and markets. Day 3: Parks and riverfront.`);
+
+  return {
+    success: true,
+    plan: {
+      destination: to_city || 'destination',
+      overview,
+      places_to_visit: [],
+      restaurants,
+      maps: {},
+      attractive_places: attractivePlaces,
+      travel_methods: travelMethods,
+      budget_breakdown: budgetBreakdownText,
+      detailed_itinerary: detailedItinerary,
+    },
+  };
 }
 
 async function getCoordinates(city: string): Promise<{ lat: number; lng: number } | null> {
@@ -268,6 +311,15 @@ export const handleTravelPlan: RequestHandler = async (req, res) => {
         error: "Gemini API key not configured. Please check your environment variables."
       } as TravelPlanResponse);
     }
+
+    // Check if we should use mock mode (when API quota is exceeded)
+    const useMockMode = process.env.USE_MOCK_MODE === 'true' || req.headers['x-mock-mode'] === 'true';
+    
+    if (useMockMode) {
+      console.log('Using mock mode for travel plan generation');
+      const mockPlan = generateMockTravelPlan(req.body);
+      return res.json(mockPlan);
+    }
     
     const { from_city, to_city, budget, currency, duration, travelers }: TravelPlanRequest = req.body;
 
@@ -295,12 +347,12 @@ export const handleTravelPlan: RequestHandler = async (req, res) => {
     // Step 1: Research destination and get overview
     const overviewPrompt = `Provide a travel overview for ${from_city} to ${to_city}. Duration: ${duration} days, ${travelers} travelers, Budget: ₹${budgetINR.toLocaleString('en-IN')} (${budgetCategory}). Write about what makes ${to_city} special in simple paragraphs.`;
 
-    const overview = await callGeminiAI(overviewPrompt);
+    const overview = sanitizeAiText(await callGeminiAI(overviewPrompt));
 
     // Step 2: Get places to visit and attractions
     const placesPrompt = `List top 10-15 attractions in ${to_city} for ${duration} days, ${travelers} travelers, ${budgetCategory} budget. Include name, description, why special, time needed, best time, and costs. Number each attraction.`;
 
-    const attractivePlaces = await callGeminiAI(placesPrompt);
+    const attractivePlaces = sanitizeAiText(await callGeminiAI(placesPrompt));
 
     // Step 3: Get restaurant recommendations
     const restaurantsPrompt = `
@@ -318,7 +370,7 @@ For each recommendation include restaurant name, location, cuisine type, signatu
 Please write in simple, clean text without using markdown formatting, asterisks, hashes, or special symbols. Use plain paragraphs with clear spacing between different meal categories and restaurants.
 `;
 
-    const restaurants = await callGeminiAI(restaurantsPrompt);
+    const restaurants = sanitizeAiText(await callGeminiAI(restaurantsPrompt));
 
     // Step 4: Get travel methods from source to destination
     const travelMethodsPrompt = `
@@ -335,7 +387,7 @@ Consider the ${duration}-day trip for ${travelers} people with a total budget of
 Please write in simple, clean paragraphs without using markdown formatting, asterisks, hashes, or special symbols. Use plain text with clear spacing between different transportation options.
 `;
 
-    const travelMethods = await callGeminiAI(travelMethodsPrompt);
+    const travelMethods = sanitizeAiText(await callGeminiAI(travelMethodsPrompt));
 
     // Step 5: Create detailed day-by-day itinerary with budget breakdown
     const itineraryPrompt = `
@@ -368,7 +420,7 @@ Make sure all costs are realistic and add up correctly. Show both total costs an
 Please write in simple, clean text without using markdown formatting, asterisks, hashes, pipes, or special symbols. Use plain paragraphs with clear spacing between days and time periods. Make the schedule practical and enjoyable within the budget.
 `;
 
-    const detailedItinerary = await callGeminiAI(itineraryPrompt);
+    const detailedItinerary = sanitizeAiText(await callGeminiAI(itineraryPrompt));
 
     // Step 6: Get coordinates and create maps
     const [fromCoords, toCoords] = await Promise.all([
