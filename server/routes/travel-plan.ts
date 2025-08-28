@@ -415,23 +415,83 @@ export const handleTravelPlan: RequestHandler = async (req, res) => {
     const budgetCategory = getBudgetCategory(budgetINR, duration, travelers);
     const budgetBreakdown = createBudgetBreakdown(budgetINR, budgetCategory);
 
-    // Single Gemini call returning JSON with all sections
-    const combined = await generatePlanViaGemini({
-      from_city,
-      to_city,
-      budgetINR,
-      currency,
-      budget,
-      duration,
-      travelers,
-      budgetCategory,
-      budgetBreakdown,
-    });
-    const overview = sanitizeAiText(combined.overview);
-    const attractivePlaces = sanitizeAiText(combined.attractive_places);
-    const restaurants = sanitizeAiText(combined.restaurants);
-    const travelMethods = sanitizeAiText(combined.travel_methods);
-    const detailedItinerary = sanitizeAiText(combined.detailed_itinerary);
+    // Restore original rich format using five prompts, executed in parallel
+    const overviewPrompt = `Provide a travel overview for ${from_city} to ${to_city}. Duration: ${duration} days, ${travelers} travelers, Budget: ₹${budgetINR.toLocaleString('en-IN')} (${budgetCategory}). Write about what makes ${to_city} special in simple paragraphs.`;
+
+    const placesPrompt = `List top 10-15 attractions in ${to_city} for ${duration} days, ${travelers} travelers, ${budgetCategory} budget. Include name, description, why special, time needed, best time, and costs. Number each attraction.`;
+
+    const restaurantsPrompt = `
+Recommend restaurants and dining options in ${to_city} for ${travelers} people on a ${budgetCategory} budget (₹${budgetINR.toLocaleString('en-IN')} total budget).
+
+Provide recommendations for:
+1. Breakfast places (3-4 options)
+2. Lunch options (4-5 options)
+3. Dinner restaurants (4-5 options)
+4. Street food and local snacks
+5. Desserts and cafes
+
+For each recommendation include restaurant name, location, cuisine type, signature dishes, price range per person, and why it's recommended.
+
+Please write in simple, clean text without using markdown formatting, asterisks, hashes, or special symbols. Use plain paragraphs with clear spacing between different meal categories and restaurants.
+`;
+
+    const travelMethodsPrompt = `
+Provide comprehensive travel options from ${from_city} to ${to_city}:
+
+1. Flight options - Major airlines, flight duration, booking strategies, cost range for ${travelers} travelers, best airports
+2. Train options (if applicable) - Routes, duration, class options, costs, booking tips
+3. Bus or road options (if applicable) - Services, driving routes, duration, cost estimates
+4. Local transportation in ${to_city} - Best ways to get around, public transport, taxi apps, walking areas
+5. Transportation budget allocation - Recommended budget split for ${budgetCategory} category, cost-saving tips
+
+Consider the ${duration}-day trip for ${travelers} people with a total budget of ₹${budgetINR.toLocaleString('en-IN')}.
+
+Please write in simple, clean paragraphs without using markdown formatting, asterisks, hashes, or special symbols. Use plain text with clear spacing between different transportation options.
+`;
+
+    const itineraryPrompt = `
+Create a detailed ${duration}-day itinerary for ${travelers} travelers from ${from_city} to ${to_city} with a total budget of ₹${budgetINR.toLocaleString('en-IN')} (${budgetCategory} category).
+
+Budget Breakdown:
+- Accommodation: ₹${Math.round(budgetBreakdown.accommodation).toLocaleString('en-IN')}
+- Food: ₹${Math.round(budgetBreakdown.food).toLocaleString('en-IN')}
+- Transport: ₹${Math.round(budgetBreakdown.transport).toLocaleString('en-IN')}
+- Activities: ₹${Math.round(budgetBreakdown.activities).toLocaleString('en-IN')}
+- Miscellaneous: ₹${Math.round(budgetBreakdown.miscellaneous).toLocaleString('en-IN')}
+
+Create a time-based schedule for each day with morning, afternoon, and evening activities. For each time slot include the activity or location, duration, cost per person, transportation details, and tips.
+
+Include realistic travel times between locations, specific attraction entry fees, meal costs, transportation costs, and cultural tips.
+
+IMPORTANT: At the end of the itinerary, provide a comprehensive "BUDGET SPENT SUMMARY" section that includes:
+
+1. Total accommodation costs for ${duration} days
+2. Total food costs (all meals for ${travelers} people)
+3. Total transportation costs (flights/trains + local transport)
+4. Total activity and attraction costs
+5. Total miscellaneous expenses
+6. GRAND TOTAL SPENT for the entire trip
+7. Comparison with allocated budget (₹${budgetINR.toLocaleString('en-IN')})
+8. Amount saved or exceeded
+
+Make sure all costs are realistic and add up correctly. Show both total costs and per-person costs.
+
+Please write in simple, clean text without using markdown formatting, asterisks, hashes, pipes, or special symbols. Use plain paragraphs with clear spacing between days and time periods. Make the schedule practical and enjoyable within the budget.
+`;
+
+    const [overviewRaw, placesRaw, restaurantsRaw, travelMethodsRaw, itineraryRaw] = await Promise.all([
+      callGeminiAI(overviewPrompt),
+      callGeminiAI(placesPrompt),
+      callGeminiAI(restaurantsPrompt),
+      callGeminiAI(travelMethodsPrompt),
+      callGeminiAI(itineraryPrompt),
+    ]);
+
+    const overview = sanitizeAiText(overviewRaw);
+    const attractivePlaces = sanitizeAiText(placesRaw);
+    const restaurants = sanitizeAiText(restaurantsRaw);
+    const travelMethods = sanitizeAiText(travelMethodsRaw);
+    const detailedItinerary = sanitizeAiText(itineraryRaw);
 
     // Step 6: Get coordinates and create maps
     const [fromCoords, toCoords] = await Promise.all([
