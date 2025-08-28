@@ -40,7 +40,7 @@ The itinerary includes **summaries, maps, and dining recommendations** using **p
 ```
 
 ---
-**To check live demo open this link:** https://traveliterary.netlify.app/
+**To check live demo open this link:** https://travelitirerary.netlify.app/
 
 ## ⚙️ Setup & Installation
 
