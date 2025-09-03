@@ -121,17 +121,17 @@ export default function Index() {
     }
   };
 
-  const cyberpunkDestinations = [
-    { name: "Neo-Tokyo", sector: "Cyber District", icon: "🏙️", threat: "HIGH", description: "Megacity of the future" },
-    { name: "Cyber-Paris", sector: "Digital Quarter", icon: "🗼", threat: "MEDIUM", description: "Holographic romance" },
-    { name: "Neo-Dubai", sector: "Floating City", icon: "🏗️", threat: "LOW", description: "Sky-high luxury" },
-    { name: "Cyber-Goa", sector: "Beach Node", icon: "🏖️", threat: "MEDIUM", description: "Digital paradise" },
-    { name: "Neo-Delhi", sector: "Tech Hub", icon: "🏛️", threat: "HIGH", description: "Ancient meets future" },
-    { name: "Cyber-Mumbai", sector: "Port Matrix", icon: "🌊", threat: "MAXIMUM", description: "Gateway to tomorrow" }
+  const popularDestinations = [
+    { name: "Goa", country: "India", image: "🏖️", description: "Beautiful beaches and vibrant nightlife" },
+    { name: "Kerala", country: "India", image: "🌴", description: "Backwaters and hill stations" },
+    { name: "Rajasthan", country: "India", image: "🏰", description: "Royal palaces and desert adventures" },
+    { name: "Paris", country: "France", image: "🗼", description: "City of lights and romance" },
+    { name: "Tokyo", country: "Japan", image: "🏯", description: "Modern metropolis meets tradition" },
+    { name: "Dubai", country: "UAE", image: "🏗️", description: "Luxury shopping and architecture" }
   ];
 
-  const cyberpunkCities = [
-    "Neo-Mumbai", "Cyber-Delhi", "Digital-Bangalore", "Tech-Chennai", "Future-Kolkata", "Neo-Hyderabad", "Cyber-Pune", "Digital-Ahmedabad"
+  const popularFromCities = [
+    "Mumbai", "Delhi", "Bangalore", "Chennai", "Kolkata", "Hyderabad", "Pune", "Ahmedabad"
   ];
 
   return (
@@ -221,69 +221,69 @@ export default function Index() {
             </div>
             
             <h1 className="text-6xl md:text-8xl font-black text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 via-purple-500 to-yellow-400 neon-text mb-6 leading-tight">
-              NEURAL
-              <span className="block text-6xl md:text-8xl">ROUTING</span>
-              <span className="block text-4xl md:text-6xl text-cyan-400">SYSTEM</span>
+              Plan Your Perfect
+              <span className="block text-6xl md:text-8xl">AI Journey</span>
+              <span className="block text-4xl md:text-6xl text-cyan-400">Today</span>
             </h1>
             
             <p className="text-xl text-slate-300 mb-12 max-w-3xl mx-auto font-mono">
-              Advanced AI-powered navigation matrix for optimal route calculation and destination analysis
+              Get comprehensive travel plans with places to visit, restaurant recommendations, maps, and best travel routes powered by AI
             </p>
 
             {/* Main Interface */}
             {!travelPlan && (
               <Card className="max-w-4xl mx-auto shadow-2xl border-cyan-500/30 bg-slate-800/90 backdrop-blur">
                 <CardHeader className="border-b border-cyan-500/30">
-                  <CardTitle className="flex items-center justify-center space-x-3 text-cyan-400">
-                    <Terminal className="h-6 w-6" />
-                    <span className="text-2xl font-mono">NEURAL INTERFACE</span>
-                  </CardTitle>
-                  <CardDescription className="text-slate-400 text-center">
-                    Input coordinates for neural network processing and route optimization
-                  </CardDescription>
+                                     <CardTitle className="flex items-center justify-center space-x-3 text-cyan-400">
+                     <Terminal className="h-6 w-6" />
+                     <span className="text-2xl font-mono">Create Your Travel Plan</span>
+                   </CardTitle>
+                   <CardDescription className="text-slate-400 text-center">
+                     Fill in your travel details and get a comprehensive AI-powered itinerary
+                   </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-6 p-8">
                   {/* Route Matrix */}
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div className="space-y-3">
-                      <label className="text-sm font-bold text-cyan-400 flex items-center font-mono">
-                        <Rocket className="h-4 w-4 mr-2" />
-                        ORIGIN NODE
-                      </label>
-                      <Input
-                        placeholder="Enter origin coordinates..."
-                        value={fromCity}
-                        onChange={(e) => setFromCity(e.target.value)}
-                        className="border-cyan-500/30 bg-slate-700 text-cyan-100 placeholder:text-slate-500 font-mono"
-                        list="origin-nodes"
-                      />
-                      <datalist id="origin-nodes">
-                        {cyberpunkCities.map((city) => (
-                          <option key={city} value={city} />
-                        ))}
-                      </datalist>
+                                             <label className="text-sm font-bold text-cyan-400 flex items-center font-mono">
+                         <Rocket className="h-4 w-4 mr-2" />
+                         From City
+                       </label>
+                       <Input
+                         placeholder="Mumbai, Delhi, Bangalore..."
+                         value={fromCity}
+                         onChange={(e) => setFromCity(e.target.value)}
+                         className="border-cyan-500/30 bg-slate-700 text-cyan-100 placeholder:text-slate-500 font-mono"
+                         list="from-cities"
+                       />
+                       <datalist id="from-cities">
+                         {popularFromCities.map((city) => (
+                           <option key={city} value={city} />
+                         ))}
+                       </datalist>
                     </div>
                     <div className="space-y-3">
-                      <label className="text-sm font-bold text-purple-400 flex items-center font-mono">
-                        <Globe className="h-4 w-4 mr-2" />
-                        TARGET NODE
-                      </label>
-                      <Input
-                        placeholder="Enter destination coordinates..."
-                        value={toCity}
-                        onChange={(e) => setToCity(e.target.value)}
-                        className="border-purple-500/30 bg-slate-700 text-purple-100 placeholder:text-slate-500 font-mono"
-                      />
+                                             <label className="text-sm font-bold text-purple-400 flex items-center font-mono">
+                         <Globe className="h-4 w-4 mr-2" />
+                         To City (Destination)
+                       </label>
+                       <Input
+                         placeholder="Paris, Goa, Dubai..."
+                         value={toCity}
+                         onChange={(e) => setToCity(e.target.value)}
+                         className="border-purple-500/30 bg-slate-700 text-purple-100 placeholder:text-slate-500 font-mono"
+                       />
                     </div>
                   </div>
 
                   {/* Parameters Grid */}
                   <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                     <div className="space-y-3">
-                      <label className="text-sm font-bold text-yellow-400 flex items-center font-mono">
-                        <Zap className="h-4 w-4 mr-2" />
-                        ENERGY BUDGET
-                      </label>
+                                             <label className="text-sm font-bold text-yellow-400 flex items-center font-mono">
+                         <Zap className="h-4 w-4 mr-2" />
+                         Total Budget
+                       </label>
                       <Input
                         type="number"
                         placeholder="50000"
@@ -294,7 +294,7 @@ export default function Index() {
                       />
                     </div>
                     <div className="space-y-3">
-                      <label className="text-sm font-bold text-green-400 font-mono">CURRENCY MATRIX</label>
+                                             <label className="text-sm font-bold text-green-400 font-mono">Currency</label>
                       <Select value={currency} onValueChange={setCurrency}>
                         <SelectTrigger className="border-green-500/30 bg-slate-700 text-green-100 font-mono">
                           <SelectValue />
