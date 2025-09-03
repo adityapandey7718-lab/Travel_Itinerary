@@ -40,7 +40,7 @@ The itinerary includes **summaries, maps, and dining recommendations** using **p
 ```
 
 ---
-**To check live demo open this link:** https://travelitirerary.netlify.app/
+**To check live demo open this link:** https://travelitineraryapp.netlify.app/
 
 ## ⚙️ Setup & Installation
 
@@ -52,7 +52,7 @@ cd <repo-name>
 
 ### 2. Install dependencies
 ```bash
-npm install
+pnpm install
 ```
 
 ### 3. Setup environment variables
@@ -67,12 +67,12 @@ GEOAPIFY_API_KEY=your_geoapify_key_here
 
 ### 4. Run locally
 ```bash
-npm run dev
+pnpm dev
 ```
 
 ### 5. Build for production
 ```bash
-npm run build
+pnpm run build
 ```
 
 ---
@@ -90,11 +90,6 @@ npm run build
 - Offline export to PDF / Word
 - Hotel booking integration
 - User login and saved itineraries
-
----
-
-## 🧑‍💻 Contributors
-- Krishna Gupta (Creator)
 
 ---
 
