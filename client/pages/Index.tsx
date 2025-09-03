@@ -65,12 +65,12 @@ export default function Index() {
   const handlePlanTrip = async () => {
     if (!fromCity || !toCity || !budget || !duration || !travelers || !currency) {
       console.log('Validation failed:', { fromCity, toCity, budget, duration, travelers, currency });
-      alert("SYSTEM ERROR: Incomplete parameters detected");
+      alert("Please fill in all required fields");
       return;
     }
     
     if (parseFloat(budget) <= 0 || parseInt(duration) <= 0 || parseInt(travelers) <= 0) {
-      alert("CRITICAL ERROR: Invalid numerical values");
+      alert("Budget, duration, and travelers must be positive numbers");
       return;
     }
 
@@ -114,7 +114,7 @@ export default function Index() {
       console.error('Error creating travel plan:', error);
       setTravelPlan({
         success: false,
-        error: error instanceof Error ? error.message : 'SYSTEM FAILURE: Neural network overload detected'
+        error: error instanceof Error ? error.message : 'Failed to create travel plan. Please try again.'
       });
     } finally {
       setIsPlanning(false);
@@ -164,8 +164,8 @@ export default function Index() {
               <div className="absolute -top-1 -right-1 w-3 h-3 bg-green-400 rounded-full animate-pulse"></div>
             </div>
             <div>
-              <h1 className="text-2xl font-bold text-cyan-400 neon-text glitch" data-text="NEURAL NAVIGATOR">
-                NEURAL NAVIGATOR
+              <h1 className="text-2xl font-bold text-cyan-400 neon-text glitch" data-text="AI TRAVEL PLANNER">
+                AI TRAVEL PLANNER
               </h1>
               <div className="flex items-center space-x-2 text-xs text-green-400">
                 <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
@@ -208,11 +208,11 @@ export default function Index() {
             <div className="flex items-center justify-center space-x-6 mb-8">
               <div className="flex items-center space-x-2 bg-slate-800/50 border border-cyan-500/30 px-4 py-2 rounded-lg">
                 <Activity className="h-4 w-4 text-green-400" />
-                <span className="text-green-400 text-sm font-mono">NEURAL CORE: ACTIVE</span>
+                <span className="text-green-400 text-sm font-mono">AI CORE: ACTIVE</span>
               </div>
               <div className="flex items-center space-x-2 bg-slate-800/50 border border-purple-500/30 px-4 py-2 rounded-lg">
                 <Satellite className="h-4 w-4 text-purple-400" />
-                <span className="text-purple-400 text-sm font-mono">SATELLITE: LOCKED</span>
+                <span className="text-purple-400 text-sm font-mono">MAPS: LOCKED</span>
               </div>
               <div className="flex items-center space-x-2 bg-slate-800/50 border border-yellow-500/30 px-4 py-2 rounded-lg">
                 <BarChart3 className="h-4 w-4 text-yellow-400" />
@@ -234,56 +234,56 @@ export default function Index() {
             {!travelPlan && (
               <Card className="max-w-4xl mx-auto shadow-2xl border-cyan-500/30 bg-slate-800/90 backdrop-blur">
                 <CardHeader className="border-b border-cyan-500/30">
-                                     <CardTitle className="flex items-center justify-center space-x-3 text-cyan-400">
-                     <Terminal className="h-6 w-6" />
-                     <span className="text-2xl font-mono">Create Your Travel Plan</span>
-                   </CardTitle>
-                   <CardDescription className="text-slate-400 text-center">
-                     Fill in your travel details and get a comprehensive AI-powered itinerary
-                   </CardDescription>
+                  <CardTitle className="flex items-center justify-center space-x-3 text-cyan-400">
+                    <Terminal className="h-6 w-6" />
+                    <span className="text-2xl font-mono">Create Your Travel Plan</span>
+                  </CardTitle>
+                  <CardDescription className="text-slate-400 text-center">
+                    Fill in your travel details and get a comprehensive AI-powered itinerary
+                  </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-6 p-8">
                   {/* Route Matrix */}
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div className="space-y-3">
-                                             <label className="text-sm font-bold text-cyan-400 flex items-center font-mono">
-                         <Rocket className="h-4 w-4 mr-2" />
-                         From City
-                       </label>
-                       <Input
-                         placeholder="Mumbai, Delhi, Bangalore..."
-                         value={fromCity}
-                         onChange={(e) => setFromCity(e.target.value)}
-                         className="border-cyan-500/30 bg-slate-700 text-cyan-100 placeholder:text-slate-500 font-mono"
-                         list="from-cities"
-                       />
-                       <datalist id="from-cities">
-                         {popularFromCities.map((city) => (
-                           <option key={city} value={city} />
-                         ))}
-                       </datalist>
+                      <label className="text-sm font-bold text-cyan-400 flex items-center font-mono">
+                        <Rocket className="h-4 w-4 mr-2" />
+                        From City
+                      </label>
+                      <Input
+                        placeholder="Mumbai, Delhi, Bangalore..."
+                        value={fromCity}
+                        onChange={(e) => setFromCity(e.target.value)}
+                        className="border-cyan-500/30 bg-slate-700 text-cyan-100 placeholder:text-slate-500 font-mono"
+                        list="from-cities"
+                      />
+                      <datalist id="from-cities">
+                        {popularFromCities.map((city) => (
+                          <option key={city} value={city} />
+                        ))}
+                      </datalist>
                     </div>
                     <div className="space-y-3">
-                                             <label className="text-sm font-bold text-purple-400 flex items-center font-mono">
-                         <Globe className="h-4 w-4 mr-2" />
-                         To City (Destination)
-                       </label>
-                       <Input
-                         placeholder="Paris, Goa, Dubai..."
-                         value={toCity}
-                         onChange={(e) => setToCity(e.target.value)}
-                         className="border-purple-500/30 bg-slate-700 text-purple-100 placeholder:text-slate-500 font-mono"
-                       />
+                      <label className="text-sm font-bold text-purple-400 flex items-center font-mono">
+                        <Globe className="h-4 w-4 mr-2" />
+                        To City (Destination)
+                      </label>
+                      <Input
+                        placeholder="Paris, Goa, Dubai..."
+                        value={toCity}
+                        onChange={(e) => setToCity(e.target.value)}
+                        className="border-purple-500/30 bg-slate-700 text-purple-100 placeholder:text-slate-500 font-mono"
+                      />
                     </div>
                   </div>
 
                   {/* Parameters Grid */}
                   <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                     <div className="space-y-3">
-                                             <label className="text-sm font-bold text-yellow-400 flex items-center font-mono">
-                         <Zap className="h-4 w-4 mr-2" />
-                         Total Budget
-                       </label>
+                      <label className="text-sm font-bold text-yellow-400 flex items-center font-mono">
+                        <Zap className="h-4 w-4 mr-2" />
+                        Total Budget
+                      </label>
                       <Input
                         type="number"
                         placeholder="50000"
@@ -294,7 +294,7 @@ export default function Index() {
                       />
                     </div>
                     <div className="space-y-3">
-                                             <label className="text-sm font-bold text-green-400 font-mono">Currency</label>
+                      <label className="text-sm font-bold text-green-400 font-mono">Currency</label>
                       <Select value={currency} onValueChange={setCurrency}>
                         <SelectTrigger className="border-green-500/30 bg-slate-700 text-green-100 font-mono">
                           <SelectValue />
@@ -311,7 +311,7 @@ export default function Index() {
                     <div className="space-y-3">
                       <label className="text-sm font-bold text-pink-400 flex items-center font-mono">
                         <Clock className="h-4 w-4 mr-2" />
-                        TIME CYCLE
+                        Duration (Days)
                       </label>
                       <Input
                         type="number"
@@ -326,7 +326,7 @@ export default function Index() {
                     <div className="space-y-3">
                       <label className="text-sm font-bold text-blue-400 flex items-center font-mono">
                         <Users className="h-4 w-4 mr-2" />
-                        OPERATORS
+                        Number of Travelers
                       </label>
                       <Input
                         type="number"
@@ -349,12 +349,12 @@ export default function Index() {
                     {isPlanning ? (
                       <>
                         <Brain className="h-5 w-5 mr-3 animate-spin" />
-                        PROCESSING NEURAL MATRIX...
+                        Creating Your Travel Plan...
                       </>
                     ) : (
                       <>
                         <Zap className="h-5 w-5 mr-3" />
-                        INITIATE NEURAL ROUTING
+                        Generate AI Travel Plan
                       </>
                     )}
                   </Button>
@@ -370,7 +370,7 @@ export default function Index() {
                 size="lg"
               >
                 <RefreshCw className="h-5 w-5 mr-2" />
-                RESET NEURAL INTERFACE
+                Create New Travel Plan
               </Button>
             )}
           </div>
@@ -384,33 +384,33 @@ export default function Index() {
                 <div>
                   <div className="text-center mb-12">
                     <h2 className="text-4xl md:text-5xl font-bold text-cyan-400 neon-text mb-4 font-mono">
-                      NEURAL ROUTING COMPLETE
+                      Your AI Travel Plan
                     </h2>
                     <div className="flex items-center justify-center space-x-4 text-slate-300 font-mono">
-                      <span>ORIGIN: {fromCity}</span>
+                      <span>From: {fromCity}</span>
                       <span className="text-cyan-400">→</span>
-                      <span>TARGET: {travelPlan.plan.destination}</span>
+                      <span>To: {travelPlan.plan.destination}</span>
                       <span className="text-purple-400">|</span>
-                      <span>CYCLE: {duration} days</span>
+                      <span>{duration} days</span>
                       <span className="text-yellow-400">|</span>
-                      <span>OPERATORS: {travelers}</span>
+                      <span>{travelers} travelers</span>
                     </div>
                   </div>
 
                   <Tabs defaultValue="overview" className="w-full">
                     <TabsList className="grid w-full grid-cols-6 bg-slate-800 border-cyan-500/30">
-                      <TabsTrigger value="overview" className="text-cyan-400 data-[state=active]:bg-cyan-500 data-[state=active]:text-slate-900">OVERVIEW</TabsTrigger>
-                      <TabsTrigger value="places" className="text-purple-400 data-[state=active]:bg-purple-500 data-[state=active]:text-slate-900">LOCATIONS</TabsTrigger>
-                      <TabsTrigger value="restaurants" className="text-yellow-400 data-[state=active]:bg-yellow-500 data-[state=active]:text-slate-900">SUSTENANCE</TabsTrigger>
-                      <TabsTrigger value="maps" className="text-green-400 data-[state=active]:bg-green-500 data-[state=active]:text-slate-900">CARTOGRAPHY</TabsTrigger>
-                      <TabsTrigger value="travel" className="text-pink-400 data-[state=active]:bg-pink-500 data-[state=active]:text-slate-900">TRANSPORT</TabsTrigger>
-                      <TabsTrigger value="itinerary" className="text-blue-400 data-[state=active]:bg-blue-500 data-[state=active]:text-slate-900">EXECUTION</TabsTrigger>
+                      <TabsTrigger value="overview" className="text-cyan-400 data-[state=active]:bg-cyan-500 data-[state=active]:text-slate-900">Overview</TabsTrigger>
+                      <TabsTrigger value="places" className="text-purple-400 data-[state=active]:bg-purple-500 data-[state=active]:text-slate-900">Places</TabsTrigger>
+                      <TabsTrigger value="restaurants" className="text-yellow-400 data-[state=active]:bg-yellow-500 data-[state=active]:text-slate-900">Restaurants</TabsTrigger>
+                      <TabsTrigger value="maps" className="text-green-400 data-[state=active]:bg-green-500 data-[state=active]:text-slate-900">Maps</TabsTrigger>
+                      <TabsTrigger value="travel" className="text-pink-400 data-[state=active]:bg-pink-500 data-[state=active]:text-slate-900">Travel</TabsTrigger>
+                      <TabsTrigger value="itinerary" className="text-blue-400 data-[state=active]:bg-blue-500 data-[state=active]:text-slate-900">Itinerary</TabsTrigger>
                     </TabsList>
 
                     <TabsContent value="overview" className="mt-8">
                       <Card className="border-cyan-500/30 bg-slate-800/90">
                         <CardHeader>
-                          <CardTitle className="text-cyan-400 font-mono">MISSION BRIEFING</CardTitle>
+                          <CardTitle className="text-cyan-400 font-mono">Trip Overview</CardTitle>
                         </CardHeader>
                         <CardContent>
                           <div className="prose prose-invert max-w-none">
@@ -425,7 +425,7 @@ export default function Index() {
                     <TabsContent value="places" className="mt-8">
                       <Card className="border-purple-500/30 bg-slate-800/90">
                         <CardHeader>
-                          <CardTitle className="text-purple-400 font-mono">TARGET LOCATIONS</CardTitle>
+                          <CardTitle className="text-purple-400 font-mono">Places to Visit</CardTitle>
                         </CardHeader>
                         <CardContent>
                           <div className="prose prose-invert max-w-none">
@@ -440,7 +440,7 @@ export default function Index() {
                     <TabsContent value="restaurants" className="mt-8">
                       <Card className="border-yellow-500/30 bg-slate-800/90">
                         <CardHeader>
-                          <CardTitle className="text-yellow-400 font-mono">SUSTENANCE UNITS</CardTitle>
+                          <CardTitle className="text-yellow-400 font-mono">Restaurant Recommendations</CardTitle>
                         </CardHeader>
                         <CardContent>
                           <div className="prose prose-invert max-w-none">
@@ -457,12 +457,12 @@ export default function Index() {
                         {travelPlan.plan.maps.static_map_url && (
                           <Card className="border-green-500/30 bg-slate-800/90">
                             <CardHeader>
-                              <CardTitle className="text-green-400 font-mono">TARGET ZONE MAP</CardTitle>
+                              <CardTitle className="text-green-400 font-mono">Destination Map</CardTitle>
                             </CardHeader>
                             <CardContent>
                               <img 
                                 src={travelPlan.plan.maps.static_map_url} 
-                                alt="Target zone map" 
+                                alt="Destination map" 
                                 className="w-full rounded-lg border border-green-500/30"
                               />
                             </CardContent>
@@ -472,7 +472,7 @@ export default function Index() {
                         {travelPlan.plan.maps.interactive_map && (
                           <Card className="border-green-500/30 bg-slate-800/90">
                             <CardHeader>
-                              <CardTitle className="text-green-400 font-mono">INTERACTIVE NAVIGATION MATRIX</CardTitle>
+                              <CardTitle className="text-green-400 font-mono">Interactive Route Map</CardTitle>
                             </CardHeader>
                             <CardContent>
                               <div 
@@ -490,7 +490,7 @@ export default function Index() {
                     <TabsContent value="travel" className="mt-8">
                       <Card className="border-pink-500/30 bg-slate-800/90">
                         <CardHeader>
-                          <CardTitle className="text-pink-400 font-mono">TRANSPORTATION PROTOCOLS</CardTitle>
+                          <CardTitle className="text-pink-400 font-mono">Travel Methods</CardTitle>
                         </CardHeader>
                         <CardContent>
                           <div className="prose prose-invert max-w-none">
@@ -505,7 +505,7 @@ export default function Index() {
                     <TabsContent value="itinerary" className="mt-8">
                       <Card className="border-blue-500/30 bg-slate-800/90">
                         <CardHeader>
-                          <CardTitle className="text-blue-400 font-mono">EXECUTION PROTOCOL & RESOURCE ALLOCATION</CardTitle>
+                          <CardTitle className="text-blue-400 font-mono">Detailed Itinerary & Budget</CardTitle>
                         </CardHeader>
                         <CardContent>
                           <div className="prose prose-invert max-w-none">
@@ -529,10 +529,10 @@ export default function Index() {
                       <Terminal className="h-16 w-16 mx-auto" />
                     </div>
                     <h3 className="text-2xl font-bold text-red-400 mb-4 font-mono">
-                      NEURAL MATRIX FAILURE
+                      Error Creating Travel Plan
                     </h3>
                     <p className="text-slate-400 font-mono">
-                      {travelPlan.error || "Critical system error detected. Neural network offline."}
+                      {travelPlan.error || "An unexpected error occurred. Please try again."}
                     </p>
                   </CardContent>
                 </Card>
@@ -541,36 +541,27 @@ export default function Index() {
           </section>
         )}
 
-        {/* Cyberpunk Destinations */}
+        {/* Popular Destinations */}
         <section className="py-20 px-4 bg-slate-900/50">
           <div className="container mx-auto">
             <div className="text-center mb-16">
               <h2 className="text-4xl md:text-5xl font-bold text-cyan-400 neon-text mb-6 font-mono">
-                NEURAL NETWORK NODES
+                Popular Destinations
               </h2>
               <p className="text-xl text-slate-400 max-w-3xl mx-auto font-mono">
-                High-priority target zones for neural routing optimization
+                Explore trending destinations loved by travelers worldwide
               </p>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-              {cyberpunkDestinations.map((destination, index) => (
+              {popularDestinations.map((destination, index) => (
                 <Card key={index} className="group hover:shadow-2xl transition-all duration-500 cursor-pointer border-cyan-500/30 bg-slate-800/90 backdrop-blur hover:border-cyan-400 hover:scale-105">
                   <CardContent className="p-8">
-                    <div className="text-6xl mb-6 text-center">{destination.icon}</div>
+                    <div className="text-6xl mb-6 text-center">{destination.image}</div>
                     <h3 className="text-2xl font-bold text-cyan-400 mb-3 group-hover:text-cyan-300 transition-colors font-mono text-center">
-                      {destination.name}
+                      {destination.name}, {destination.country}
                     </h3>
                     <p className="text-slate-400 text-center mb-4 font-mono">{destination.description}</p>
-                    <div className="flex items-center justify-between mb-4">
-                      <span className="text-sm text-purple-400 font-mono">SECTOR: {destination.sector}</span>
-                      <Badge 
-                        variant="outline" 
-                        className={`border-${destination.threat === 'HIGH' ? 'red' : destination.threat === 'MEDIUM' ? 'yellow' : 'green'}-500/50 text-${destination.threat === 'HIGH' ? 'red' : destination.threat === 'MEDIUM' ? 'yellow' : 'green'}-400 font-mono`}
-                      >
-                        THREAT: {destination.threat}
-                      </Badge>
-                    </div>
                     <div className="flex items-center justify-center space-x-1">
                       <Star className="h-4 w-4 text-yellow-400 fill-current" />
                       <Star className="h-4 w-4 text-yellow-400 fill-current" />
@@ -592,12 +583,12 @@ export default function Index() {
         <div className="container mx-auto text-center">
           <div className="flex items-center justify-center space-x-3 mb-8">
             <Cpu className="h-10 w-10 text-cyan-400" />
-            <span className="text-3xl font-bold text-cyan-400 font-mono">NEURAL NAVIGATOR</span>
+            <span className="text-3xl font-bold text-cyan-400 font-mono">AI TRAVEL PLANNER</span>
           </div>
           
           <div className="text-center text-slate-500 font-mono">
-            <p>&copy; 2024 NEURAL NAVIGATOR. Advanced AI-powered routing system.</p>
-            <p className="mt-2 text-sm">Powered by Neural Networks & Satellite Navigation Matrix</p>
+            <p>&copy; 2024 AI Travel Planner. Powered by AI & Real-time Maps.</p>
+            <p className="mt-2 text-sm">Advanced AI-powered travel planning system</p>
           </div>
         </div>
       </footer>
